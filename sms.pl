@@ -190,7 +190,7 @@ if ($opt_p)
     if ($@) # could not get
     {
         print ' |--> ', errmsg( $@ ) if $opt_v;
-        exit(2);
+        redo;
     }
 
     #
@@ -206,7 +206,7 @@ if ($opt_p)
     if (!$img_obj) # can't find
     {
         print " |--> failed\n" if $opt_v;
-        exit(2);
+        redo;
     }
 
     #
@@ -222,7 +222,7 @@ if ($opt_p)
     if ($@) # can't download
     {
         print ' |--> ', errmsg( $@ ) if $opt_v;
-        exit(2);
+        redo;
     }
 
     #
@@ -277,7 +277,7 @@ EOC
     if (!$captcha)
     {
         print " |--> empty captcha\n";
-        exit(2);
+        redo;
     }
 
     #
@@ -367,7 +367,7 @@ EOC
     {
         my $hex = unpack "H*", $captcha;
         print " |--> invalid captcha: $captcha ($hex)\n" if $opt_v;
-        exit(2);
+        redo;
     }
 
     # ok, captcha possibly breaked
@@ -404,7 +404,7 @@ EOC
     if ($@) # can't send
     {
         print ' |--> ', errmsg( $@ ) if $opt_v;
-        exit(2);
+        redo;
     }
 
     #
@@ -430,13 +430,13 @@ EOC
         {
             print " |--> you can send only 5 messages per day from this ip\n"
                 if $opt_v;
-            exit(2);
+            redo;
         }
 
         if (/ati introdus codul din imagine incorect/)
         {
             print " |--> the captcha was incorrect\n" if $opt_v;
-            exit(2);
+            redo;
         }
 
         goto DONE if /a fost expediat cu succes/;
@@ -447,7 +447,7 @@ EOC
         {
             print " |--> the recipient has deactivated this service\n"
                 if $opt_v;
-            exit(2);
+            redo;
         }
 
         goto DONE if /Mesajul Dvs. a fost expediat/;

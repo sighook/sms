@@ -9,8 +9,8 @@ Put this three lines to your `torrc` file:
 CircuitBuildTimeout 10
 LearnCircuitBuildTimeout 0
 MaxCircuitDirtiness 10
-```            
-and use "socks://127.0.0.1:9150" as proxy server
+```
+and use `socks://127.0.0.1:9150` as proxy server
 
 ### Dependencies
 * Perl, and some perl modules:
@@ -21,9 +21,8 @@ and use "socks://127.0.0.1:9150" as proxy server
 * Tesseract
 
 ### Remember
-Good luck and don't be evil! **:)**
+It's for edicational purposes. Don't be evil! **>:-)**
 
 ### Contacts
-###### chinarulezzz
-###### s.alex08 at mail dot ru
+chinarulezzz, <s.alex08@mail.ru>
 

@@ -1,0 +1,5 @@
+# proxy list
+
+# hint: configure TOR, and use this socks
+socks://127.0.0.1:9150
+

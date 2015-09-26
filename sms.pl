@@ -126,8 +126,8 @@ if ($opt_p)
 
     while (<$fh>)
     {
-        chomp;
         next if /^#/ or not length; # skip comments and empty lines
+        chomp;
         push @proxies, $_;
     }
     close $fh;
@@ -365,8 +365,7 @@ EOC
     # check some captcha requirements
     if (length $captcha != 5 || $captcha =~ /[^a-zA-Z0-9]/)
     {
-        my $hex = unpack "H*", $captcha;
-        print " |--> invalid captcha: $captcha ($hex)\n" if $opt_v;
+        print " |--> invalid captcha: $captcha\n" if $opt_v;
         redo;
     }
 

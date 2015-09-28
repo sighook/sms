@@ -10,7 +10,7 @@ CircuitBuildTimeout 10
 LearnCircuitBuildTimeout 0
 MaxCircuitDirtiness 10
 ```
-and use `socks://127.0.0.1:9150` as proxy server
+Then, restart TOR and use `socks://127.0.0.1:9150` as proxy server
 
 ### Dependencies
 * Perl, and some perl modules:

@@ -1,4 +1,4 @@
-#!/usr/bin/perl -w
+#!/usr/bin/perl -CA -w
 #
 ###############################################################################
 # SMS Sender (or flooder ^_^) for Moldcell and Orange mobile operators.       #
@@ -15,13 +15,13 @@
 # LearnCircuitBuildTimeout 0                                                  #
 # MaxCircuitDirtiness 10                                                      #
 #                                                                             #
-# --- and use "socks://127.0.0.1:9150" as proxy server ---                    #
+# --- restart TOR and use "socks://127.0.0.1:9150" as proxy server ---        #
 #                                                                             #
 # This program depends on Imagemagick and Tesseract to crack the captcha.     #
 #                                                                             #
 # Good luck and remember: don't be evil! :)                                   #
 #                                                                             #
-# contacts: s.alex08 at mail dot ru                                           #
+# contacts: s.alex08@mail.ru                                                  #
 #                                                                             #
 ###############################################################################
 
@@ -29,7 +29,6 @@ $|++;                   # autoflush stdout for verbose mode
 
 use strict;
 use utf8;
-use open qw( :std :utf8 );
 
 use POSIX 'locale_h';   # import LC_ALL constant
 
@@ -39,20 +38,20 @@ use Getopt::Std;
 use List::Util 'shuffle';
 use WWW::Mechanize;
 
-my $version = "0.2.1";
+my $version = "0.2.3";
 
 my $help = << "EOH";
 Usage: $0 [OPTIONS...] "MESSAGE"
 Version: $version
 
 Options:
-  -f <name>             Sender name in latin encoding.
-  -t <phone number>     Recipient phone number.
-  -l <log file>         Save server response to log file.
-  -p <proxies file>     Each connection will be done via random proxy.
-  -v                    Print all information.
-  -h                    Print this help and exit.
-  MESSAGE               SMS Text in latin encoding.
+  -f <name>             Sender name in latin encoding
+  -t <phone number>     Recipient phone number
+  -l <log file>         Save server response to log file
+  -p <proxies file>     Each connection will be done via random proxy
+  -v                    Print all information
+  -h                    Print this help and exit
+  MESSAGE               SMS Text
 EOH
 
 use vars qw( $opt_f $opt_t $opt_l $opt_p $opt_v $opt_h $opt_m );
@@ -63,20 +62,6 @@ die $help if $opt_h;
 
 # suppress unimportant information of error messages
 sub errmsg { lc shift =~ s/at .* line \d+\.//r }
-
-#
-# check requirements for sender
-#
-
-if ($opt_f)
-{
-    die "Length of sender name should be less than 10 latin characters\n"
-        if length $opt_f > 9 || $opt_f !~ /[A-Za-z0-9]/;
-}
-else
-{
-    die "The sender name must be specified.\n";
-}
 
 #
 # check requirements for phone number
@@ -95,6 +80,25 @@ else
     die "Recipient phone number must be specified\n";
 }
 
+# orange phone number starts with 6
+my $is_orange_number = substr( $opt_t, 0, 1 ) eq 6;
+
+#
+# check requirements for sender
+#
+
+if ($opt_f)
+{
+    my $length = $is_orange_number ? 6 : 9;
+
+    die "Length of sender name should be less than $length latin characters\n"
+        if length $opt_f > $length or $opt_f !~ /[A-Za-z0-9]/;
+}
+else
+{
+    die "The sender name must be specified.\n";
+}
+
 #
 # check requirements for message
 #
@@ -102,14 +106,26 @@ else
 if (@ARGV == 1)
 {
     $opt_m = shift;
+    my $length;
 
-    die "Message length should be less than 138 latin characters\n"
-        if length $opt_m > 137;
+    if ($opt_m =~ /[:ascii]/)
+    {
+        $length = $is_orange_number ? 137 : 140;
+    }
+    else
+    {
+        $length = $is_orange_number ? 59 : 69;
+    }
+
+    die "Message length should be less than $length characters\n"
+        if length $opt_m > $length;
+
 }
 else
 {
     die "Message must be specified\n";
 }
+
 
 #
 # check proxy option
@@ -126,8 +142,8 @@ if ($opt_p)
 
     while (<$fh>)
     {
-        next if /^#/ or not length; # skip comments and empty lines
         chomp;
+        next if /^#/ or not length; # skip comments and empty lines
         push @proxies, $_;
     }
     close $fh;
@@ -137,9 +153,6 @@ if ($opt_p)
 # connect to websms service center, break the captcha and send sms
 #
 {
-    # orange phone number starts with 6
-    my $is_orange_number = substr( $opt_t, 0, 1 ) eq 6;
-
     #
     # create a new browser
     #

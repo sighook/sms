@@ -21,7 +21,7 @@
 #                                                                             #
 # Good luck and remember: don't be evil! :)                                   #
 #                                                                             #
-# contacts: s.alex08@mail.ru                                                  #
+# contacts: chinarulezzz, s.alex08@mail.ru                                    #
 #                                                                             #
 ###############################################################################
 
@@ -38,7 +38,11 @@ use Getopt::Std;
 use List::Util 'shuffle';
 use WWW::Mechanize;
 
-my $version = "0.2.3";
+BEGIN {
+    $SIG{__DIE__} = sub { print "@_\nTry '$0 -h' for help\n" and exit };
+}
+
+my $version = "0.2.4";
 
 my $help = << "EOH";
 Usage: $0 [OPTIONS...] "MESSAGE"
@@ -56,9 +60,9 @@ EOH
 
 use vars qw( $opt_f $opt_t $opt_l $opt_p $opt_v $opt_h $opt_m );
 
-getopts('f:t:l:p:vh') or die "Invalid command line arguments.\n";
+getopts ('f:t:l:p:vh') or die "Invalid command line arguments.\n";
 
-die $help if $opt_h;
+do { print $help and exit } if $opt_h;
 
 # suppress unimportant information of error messages
 sub errmsg { lc shift =~ s/at .* line \d+\.//r }
@@ -70,7 +74,7 @@ sub errmsg { lc shift =~ s/at .* line \d+\.//r }
 if ($opt_t)
 {
     die "Phone number should contain 8 digits\n"
-        if length $opt_t != 8 or $opt_t !~ /\d{8}/;
+        if $opt_t !~ /^\d{8}$/;
 
     die "This is not valid Orange/Moldcell phone number\n"
         if $opt_t !~ /^(6|7)\d{7}$/;
@@ -81,7 +85,7 @@ else
 }
 
 # orange phone number starts with 6
-my $is_orange_number = substr( $opt_t, 0, 1 ) eq 6;
+my $is_orange_number = substr ($opt_t, 0, 1) eq 6;
 
 #
 # check requirements for sender
@@ -108,11 +112,13 @@ if (@ARGV == 1)
     $opt_m = shift;
     my $length;
 
-    if ($opt_m =~ /[:ascii]/)
+    if ($opt_m =~ /[[:ascii:]]/)
+    # Contains ASCII only
     {
         $length = $is_orange_number ? 137 : 140;
     }
     else
+    # Contains non-ASCII
     {
         $length = $is_orange_number ? 59 : 69;
     }
@@ -142,9 +148,8 @@ if ($opt_p)
 
     while (<$fh>)
     {
-        chomp;
-        next if /^#/ or not length; # skip comments and empty lines
-        push @proxies, $_;
+        push (@proxies, s/\R//gr)       # chomp \r\n
+            unless /^#/ or not length;  # skip comments and empty lines
     }
     close $fh;
 }
@@ -152,6 +157,7 @@ if ($opt_p)
 #
 # connect to websms service center, break the captcha and send sms
 #
+
 {
     #
     # create a new browser
@@ -159,7 +165,7 @@ if ($opt_p)
     # NOTE
     #   * add timeout option?
 
-    my $mech = WWW::Mechanize->new( timeout => 5 );
+    my $mech = WWW::Mechanize->new (timeout => 5);
 
     #
     # proxy settings
@@ -168,7 +174,7 @@ if ($opt_p)
     if ($opt_p)
     {
         my $proxy = shuffle @proxies;
-        $mech->proxy( [qw(http https)] => $proxy );
+        $mech->proxy ([qw(http https)] => $proxy);
 
         print "[|] use proxy connection: $proxy\n" if $opt_v;
     }
@@ -181,10 +187,8 @@ if ($opt_p)
     # set "referer" http header field, to confirm that we are human
     #
 
-    $mech->add_header( Referer => $is_orange_number
-        ? 'http://www.orange.md'
-        : 'http://www.moldcell.md/sendsms'
-    );
+    $mech->add_header (Referer => $is_orange_number ? 'http://www.orange.md'
+                                                    : 'http://www.moldcell.md/sendsms');
 
     #
     # get page
@@ -194,15 +198,13 @@ if ($opt_p)
 
     eval
     {
-        $mech->get( $is_orange_number
-            ? 'https://www.orangetext.md'
-            : 'http://www.moldcell.md/sendsms'
-        )
+        $mech->get ($is_orange_number ? 'https://www.orangetext.md'
+                                      : 'http://www.moldcell.md/sendsms')
     };
 
     if ($@) # could not get
     {
-        print ' |--> ', errmsg( $@ ) if $opt_v;
+        print ' |--> ', errmsg ($@) if $opt_v;
         redo;
     }
 
@@ -212,9 +214,9 @@ if ($opt_p)
 
     print "[|] search captcha image\n" if $opt_v;
 
-    my $img_obj //= $mech->find_image(
-        url_regex => $is_orange_number ? qr/CaptchaImage\.axd/ : qr/captcha/i
-    );
+    my $img_obj //= $mech->find_image (url_regex => $is_orange_number
+                                                  ? qr/CaptchaImage\.axd/
+                                                  : qr/captcha/i);
 
     if (!$img_obj) # can't find
     {
@@ -228,13 +230,13 @@ if ($opt_p)
 
     print "[|] download\n" if $opt_v;
 
-    my $captcha = 'captcha'.( $is_orange_number ? '.jpg' : '.png' );
+    my $captcha = 'captcha'. ($is_orange_number ? '.jpg' : '.png');
 
-    eval { $mech->get( $img_obj->url, ':content_file' => $captcha ) };
+    eval { $mech->get ($img_obj->url, ':content_file' => $captcha) };
 
     if ($@) # can't download
     {
-        print ' |--> ', errmsg( $@ ) if $opt_v;
+        print ' |--> ', errmsg ($@) if $opt_v;
         redo;
     }
 
@@ -415,7 +417,7 @@ EOC
 
     if ($@) # can't send
     {
-        print ' |--> ', errmsg( $@ ) if $opt_v;
+        print ' |--> ', errmsg ($@) if $opt_v;
         redo;
     }
 

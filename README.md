@@ -24,5 +24,5 @@ Then, restart TOR and use `socks://127.0.0.1:9150` as proxy server
 It's for edicational purposes. Don't be evil! **>:-)**
 
 ### Contacts
-chinarulezzz, <s.alex08@mail.ru>
+chinarulezzz, <alexandr.savca89@gmail.com>
 

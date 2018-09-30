@@ -21,7 +21,7 @@
 #                                                                             #
 # Good luck and remember: don't be evil! :)                                   #
 #                                                                             #
-# contacts: chinarulezzz, s.alex08@mail.ru                                    #
+# contacts: chinarulezzz, <alexandr.savca89@gmail.com>                        #
 #                                                                             #
 ###############################################################################
 
